@@ -1,0 +1,68 @@
+extends Control
+
+@onready var wonlabel = $CanvasLayer/WON
+@onready var lostlabel = $CanvasLayer/LOST
+@onready var tielabel = $CanvasLayer/TIE
+@onready var reset_button = $CanvasLayer/ResetGame
+
+@onready var button = $HBoxContainer/Button
+@onready var button1 = $HBoxContainer/Button2
+@onready var button2 = $HBoxContainer/Button3
+var choose
+var RobotChoice
+
+func _ready() -> void:
+	_hide_ui()
+
+func _hide_ui() -> void:
+	wonlabel.hide()
+	lostlabel.hide()
+	tielabel.hide()
+	reset_button.hide()
+
+func _hide_btn():
+	button.hide()
+	button1.hide()
+	button2.hide()
+
+func _show_btn():
+	button.show()
+	button1.show()
+	button2.show()
+
+func RobotChooses(X):
+	RobotChoice = (["Rock","Paper","Scissors"].pick_random())
+	print("AI Choice: ",RobotChoice, " Player Choice: ", X)
+	
+	if (X == "Rock" and RobotChoice == "Paper") or (X == "Paper" and RobotChoice == "Scissors") or (X == "Scissors" and RobotChoice == "Rock"):
+		
+		lostlabel.show()
+	elif X == RobotChoice:
+		
+		tielabel.show()
+	else:
+		
+		wonlabel.show()
+
+	reset_button.show()
+
+
+func _on_button_pressed() -> void:
+	choose = "Rock"
+	_hide_btn()
+	RobotChooses(choose)
+
+func _on_button_2_pressed() -> void:
+	choose = "Paper"
+	_hide_btn()
+	RobotChooses(choose)
+
+func _on_button_3_pressed() -> void:
+	choose = "Scissors"
+	_hide_btn()
+	RobotChooses(choose)
+
+func _on_reset_game_pressed() -> void:
+	_hide_ui()
+	_show_btn()
+	print("Game Reset! Choose again.")

@@ -29,10 +29,10 @@ func _physics_process(delta: float) -> void:
 		if direction < 0:
 			animated_sprite.flip_h = true  # Facing left
 			# Flip the hitbox position horizontally to match where you face
-			AttackBox.scale.x = -1
+			AttackBox.position.x = -abs(AttackBox.position.x)
 		else:
 			animated_sprite.flip_h = false # Facing right
-			AttackBox.scale.x = 1
+			AttackBox.position.x = abs(AttackBox.position.x)
 		
 		if not is_attacking:
 			is_attacking = true

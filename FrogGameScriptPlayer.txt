@@ -18,14 +18,11 @@ func _physics_process(delta: float) -> void:
 	# Get the input direction and handle the movement/deceleration.
 	var direction := Input.get_axis("ui_left", "ui_right")
 	if direction:
-		velocity.x = direction * SPEED
 		# Flip the sprite horizontally depending on the direction
 		if direction < 0:
 			animated_sprite.flip_h = true  # Moving left -> Flip it
 		else:
 			animated_sprite.flip_h = false # Moving right -> Normal
-	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
 
 	# --- ANIMATION LOGIC ---
 	# Check if the player is in the air or on the ground

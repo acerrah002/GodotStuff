@@ -1,0 +1,28 @@
+extends Node2D
+
+@onready var enemyRigidBody = $Enemy
+@onready var leftspawn = $Left
+@onready var rightspawn = $Right
+@onready var enemysprite = $Enemy/AnimatedSprite2D
+const playerleftx = 456
+const playerrightx = 600
+# Called when the node enters the scene tree for the first time.
+var can_damage = true 
+func _ready() -> void:
+	#await get_tree().create_timer(1.0).timeout
+	print("Enemy is ready")
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	#await get_tree().create_timer(1.0).timeout
+	if enemyRigidBody.position.x == 456 or enemyRigidBody.position.x == 600:
+		if can_damage:
+			print("Player hit")
+			can_damage = false
+		pass
+	else:
+		enemysprite.play("Run")
+		enemyRigidBody.position.x += 1
+	pass

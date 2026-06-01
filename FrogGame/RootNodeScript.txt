@@ -1,28 +1,90 @@
 extends Node2D
 
-@onready var enemyRigidBody = $Enemy
+@onready var enemyTemplate = $Enemy  # Renamed to clarify it's our template master copy
 @onready var leftspawn = $Left
 @onready var rightspawn = $Right
-@onready var enemysprite = $Enemy/AnimatedSprite2D
+@onready var healthbar = $Background/Health
+@onready var background = $Background
+@onready var playerattackbox = $CharacterBody2D/AttackBox
+@onready var enemyhitbox = $Enemy/CollisionShape2D
 const playerleftx = 456
 const playerrightx = 600
-# Called when the node enters the scene tree for the first time.
+
 var can_damage = true 
+
 func _ready() -> void:
-	#await get_tree().create_timer(1.0).timeout
-	print("Enemy is ready")
-	pass # Replace with function body.
+	print("Spawner ready")
+	# Hide the original master node so it doesn't wander around the screen
+	enemyTemplate.visible = false
+	
+	# Spawn our very first active game clone
+	spawn_clone()
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	#await get_tree().create_timer(1.0).timeout
-	if enemyRigidBody.position.x == 456 or enemyRigidBody.position.x == 600:
-		if can_damage:
-			print("Player hit")
-			can_damage = false
-		pass
+func spawn_clone() -> void:
+	# 1. Duplicate the template node exactly as it's configured in your scene
+	var clone = enemyTemplate.duplicate()
+	clone.visible = true  # Make the clone visible to the player
+	
+	# 2. Pick a random side (0 = Left, 1 = Right)
+	var random_side = randi() % 2 
+	var move_dir = 1
+	var flip = false
+	
+	if random_side == 0:
+		clone.position = leftspawn.position
+		move_dir = 1
+		flip = false
 	else:
-		enemysprite.play("Run")
-		enemyRigidBody.position.x += 1
-	pass
+		clone.position = rightspawn.position
+		move_dir = -1
+		flip = true
+		
+	# 3. Save individual direction data directly into this specific clone
+	clone.set_meta("direction", move_dir)
+	
+	# 4. Add the clone to the scene tree under this script
+	add_child(clone)
+	
+	# Handle the visual flip on the clone's sprite child
+	var sprite = clone.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite:
+		sprite.flip_h = flip
+
+func _process(delta: float) -> void:
+	# 5. Look through all active child nodes to process movement and hits
+	for child in get_children():
+		# Only manipulate nodes that have our special tracking metadata tag
+		if child.has_meta("direction"):
+			var move_dir = child.get_meta("direction")
+			
+			# Check if this specific clone is hitting the player's coordinate range
+			if child.position.x >= 408 and child.position.x <= 600:
+				if can_damage:
+					print("Player hit")
+					playertakedamage(10)
+					can_damage = false
+					
+					# Delete this exact clone from memory so it stops touching the player
+					child.queue_free()
+					
+					# Spawn a brand new clone immediately from either side
+					spawn_clone()
+					
+					# Cooldown before the player can be hit by another clone
+					await get_tree().create_timer(1.0).timeout
+					can_damage = true
+			else:
+				# Play the movement animation and run the clone across the screen
+				var sprite = child.get_node("AnimatedSprite2D") as AnimatedSprite2D
+				if sprite:
+					sprite.play("Run")
+				child.position.x += 1 * move_dir
+
+func playertakedamage(Damage):
+	# Using float conversion to ensure accurate decimal percent reduction math
+	var damagemultiplayer = float(Damage) / 100.0
+	healthbar.size.x -= (background.size.x) * damagemultiplayer
+	
+	# Make sure the UI length doesn't cross zero and start drawing in reverse
+	if healthbar.size.x < 0:
+		healthbar.size.x = 0

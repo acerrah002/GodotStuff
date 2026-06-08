@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 const JUMP_VELOCITY = -520.0
-
+var can_attack: bool = true
 var is_attacking: bool = false
 
 @onready var animated_sprite = $AnimatedSprite2D
@@ -23,18 +23,33 @@ func _physics_process(delta: float) -> void:
 
 	var direction := Input.get_axis("ui_left", "ui_right")
 	
-	if direction:
-		if direction < 0:
-			animated_sprite.flip_h = true  # Facing left
-			# Flip the hitbox position horizontally to match where you face
-			AttackRay.target_position.x = -abs(AttackRay.target_position.x)
-		else:
-			animated_sprite.flip_h = false # Facing right
-			AttackRay.target_position.x = abs(AttackRay.target_position.x)
+	# 1. The gatekeeper: If we are already in a cooldown, ignore all input below
+	if can_attack:
+		var pressed_left := Input.is_action_just_pressed("ui_left")
+		var pressed_right := Input.is_action_just_pressed("ui_right")
 		
-		if not is_attacking:
+		# 2. Check if either direction was just clicked once
+		if pressed_left or pressed_right:
+			can_attack = false # Instantly lock out further inputs
 			is_attacking = true
+			
+			if pressed_left:
+				animated_sprite.flip_h = true  
+				AttackRay.scale.y = -1       
+				print("left click")
+			else:
+				animated_sprite.flip_h = false 
+				AttackRay.scale.y = 1        
+				print("right click")
+			
 			animated_sprite.play("Attack")
+			
+			# 3. The Cooldown: Wait for the attack animation to finish playing completely
+			await animated_sprite.animation_finished
+			
+			# 4. Reset states so the player can click to attack again
+			is_attacking = false
+			can_attack = true
 
 	velocity.x = 0
 
